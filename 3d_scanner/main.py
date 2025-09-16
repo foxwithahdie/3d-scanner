@@ -2,15 +2,22 @@
 Main file.
 """
 
-import asyncio
+from typing import Optional
+import time
+import serial
 
 
-async def main() -> None:
+def main() -> None:
     """
     Main function.
     """
-    pass
+    arduino: serial.Serial = serial.Serial(port="COM13", baudrate=115200, timeout=0.1)
+    while True:
+        arduino.write(bytes("received", encoding="utf-8"))
+        time.sleep(5)
+        data: Optional[bytes] = arduino.readline()
+        print(data)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
