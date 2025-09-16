@@ -2,8 +2,6 @@
 
 A 3D Scanner, run by an Arduino.
 
-git commit -m "added important packages to poetry; updated README to use poetry"
-
 To install the required packages for this project, we are using Poetry. To install Poetry, follow the steps in this link:
 
 https://python-poetry.org/docs/
