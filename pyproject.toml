@@ -8,6 +8,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+pyserial-asyncio = "^0.6"
+pyserial = "^3.5"
 
 
 [build-system]
