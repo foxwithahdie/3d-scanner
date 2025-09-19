@@ -4,11 +4,11 @@
 #include "arduino_secrets.h"
 
 const byte button = 8;
-#define KI 256
+#define KI 288
 
 int port = 8182;
 
-PinStatus arr[KI];
+int arr[KI];
 char packet[255];
 // char packet_buffer[256];
 int counter = 0;
@@ -34,11 +34,9 @@ void setup() {
 }
 
 void loop() {
-    // while (!Serial.available());
-    // dummy_receive = Serial.readString();
-    arr[counter] = digitalRead(button);
+    arr[counter] = (digitalRead(button) == HIGH ? 1 : 0) * random(0, 1024));
 
-    if (counter < 256) {
+    if (counter < KI) {
         counter++;
     }
 
@@ -51,7 +49,7 @@ void loop() {
 
         // send
         udp.beginPacket(udp.remoteIP(), udp.remotePort());
-            if (counter >= 255) {
+            if (counter >= KI - 1) {
                 udp.print("<");
                 Serial.print("<");
                 for (int i = 0; i < KI; i++) {
