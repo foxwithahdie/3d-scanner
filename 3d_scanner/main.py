@@ -27,15 +27,15 @@ def main() -> None:
 
             sock.sendto("echo".encode(), ("192.168.16.172", 8182))
             try:
-                response, addr = sock.recvfrom(2048)
+                response, addr = sock.recvfrom(1024 * 20)
                 if len(response.decode()) > 1:
                     print(
+                        "data",
                         [
                             int(data_point)
                             for data_point in response.decode()[1:-4].split(",")
-                        ]
+                        ],
                     )
-
                     with open("data/test.txt", "a", encoding="utf-8") as file:
                         file.write(
                             str(
