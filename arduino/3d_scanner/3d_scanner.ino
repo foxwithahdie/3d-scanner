@@ -1,46 +1,75 @@
+#include <WiFiS3.h>
+#include <WiFiUdp.h>
+
+#include "arduino_secrets.h"
+
 const byte button = 8;
-#define KI 1024
+#define KI 256
+
+int port = 8182;
 
 PinStatus arr[KI];
+char packet[255];
+// char packet_buffer[256];
 int counter = 0;
 String dummy_receive;
 
+// int status;
+
+WiFiUDP udp;
+int data_length;
 
 void setup() {
     pinMode(button, INPUT);
-    Serial.begin(115200);
+    Serial.begin(9600);
     Serial.setTimeout(0.000001);
+    WiFi.begin(SSID, PWD);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(100);
+        Serial.print("Connecting...");
+    }
+    Serial.print("IP = ");
+    Serial.println(WiFi.localIP());
+    udp.begin(8182);
 }
 
 void loop() {
-	while (!Serial.available());
-    dummy_receive = Serial.readString();
+    // while (!Serial.available());
+    // dummy_receive = Serial.readString();
     arr[counter] = digitalRead(button);
-    if (counter < 1025) {
-        counter++;
-    } 
-    if (counter == 1024) {
-        Serial.print("<");
-        for (int i = 0; i < KI; i++) {
-            Serial.print(arr[i]);
-            Serial.print(",");
-        }
-        Serial.print(">");
 
-        for (int i = 0; i < 1024; i++) {
-            arr[i] = LOW;
-        }
+    if (counter < 256) {
+        counter++;
+    }
+
+    if (udp.parsePacket()) {
+        data_length = udp.available();
+
+        // receive
+        udp.read(packet, 255);
+        packet[data_length] = 0;
+
+        // send
+        udp.beginPacket(udp.remoteIP(), udp.remotePort());
+            if (counter >= 255) {
+                udp.print("<");
+                Serial.print("<");
+                for (int i = 0; i < KI; i++) {
+                    udp.print(arr[i]);
+                    Serial.print(arr[i]);
+                    udp.print(",");
+                    Serial.print(",");
+                }
+                udp.print(">");
+                Serial.print(">");
+                udp.println();
+                Serial.println();
+                counter = 0;
+                for (int i = 0; i < KI; i++) {
+                    arr[i] = LOW;
+                }
+            }
+        udp.endPacket();
+
     }
 }
-// }
-
-// void setup() { 
-// 	Serial.begin(115200); 
-// 	Serial.setTimeout(1); 
-// } 
-// void loop() { 
-// 	while (!Serial.available()); 
-// 	String x = Serial.readString();
-// 	Serial.print(x); 
-// } 
-
