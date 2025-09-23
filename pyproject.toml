@@ -8,6 +8,12 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+pyserial-asyncio = "^0.6"
+pyserial = "^3.5"
+matplotlib = "^3.10.6"
+numpy = "^2.3.3"
+pandas = "^2.3.2"
+openpyxl = "^3.1.5"
 
 
 [build-system]

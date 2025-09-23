@@ -320,3 +320,5 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/python,c++,macos,windows,linux,kicad
+
+arduino_secrets.h

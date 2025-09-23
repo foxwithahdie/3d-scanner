@@ -1,10 +1,23 @@
+#include <WiFiS3.h>
+#include <WiFiUdp.h>
 #include <Servo.h>
+
+#include "arduino_secrets.h"
+
 
 // defining a macro for dictating maximum allowable length of arrays (288bits)
 #define MAX_DATA 288
 // declaring servo objects for panning and tilting servos
 Servo servoPan;
 Servo servoTilt;
+
+byte distanceSensor = A0;
+byte servoPanPin = 9;
+byte servoTiltPin = 10;
+
+WiFiUDP udp;
+int port = 8182;
+char packet[255];
 
 // setting minimum and maximum pan/tilt angles
 const int minPan = 60;
@@ -19,9 +32,19 @@ int count = 0;
 
 void setup() {
   // setting up servo pins and sensor pin as input
-  servoPan.attach(9);
-  servoTilt.attach(10);
-  pinMode(A0, INPUT);
+  servoPan.attach(servoPanPin);
+  servoTilt.attach(servoTiltPin);
+  pinMode(distanceSensor, INPUT);
+  Serial.begin(9600);
+  Serial.setTimeout(0.000001);
+  WiFi.begin(SSID, PWD);
+  while (WiFi.status() != WL_CONNECTED) {
+      delay(100);
+      Serial.print("Connecting...");
+  }
+  Serial.print("IP = ");
+  Serial.println(WiFi.localIP());
+  udp.begin(8182);
 }
 
 void loop() {
@@ -37,11 +60,47 @@ void loop() {
         servoPan.write(panAngle);
         delay(20);
         // log sensor readings and tilt/pan angle
-        dataArray[count] = analogRead(A0);
+        dataArray[count] = analogRead(distanceSensor);
         panArray[count] = panAngle;
         tiltArray[count] = tiltAngle;
         // if the counter is 277, reset the arrays
         if (count >= MAX_DATA - 1) {
+          if (udp.parsePacket()) {
+            int data = udp.available();
+            udp.read(packet, 255);
+            packet[data_length] = 0;
+            
+            udp.beginPacket(udp.remoteIP(), udp.remotePort());
+              udp.print("distance_sensor_data ");
+              udp.print("<");
+              for (int i = 0; i < MAX_DATA; i++) {
+                  udp.print(dataArray[i]);
+                  udp.print(",");
+              }
+              udp.print(">");
+              udp.println();
+            udp.endPacket();
+            udp.beginPacket(udp.remoteIP(), udp.remotePort());
+              udp.print("servo_pan_data ");
+              udp.print("<");
+              for (int i = 0; i < MAX_DATA; i++) {
+                  udp.print(panArray[i]);
+                  udp.print(",");
+              }
+              udp.print(">");
+              udp.println();
+            udp.endPacket();
+            udp.beginPacket(udp.remoteIP(), udp.remotePort());
+              udp.print("servo_tilt_data ");
+              udp.print("<");
+              for (int i = 0; i < MAX_DATA; i++) {
+                  udp.print(tiltArray[i]);
+                  udp.print(",");
+              }
+              udp.print(">");
+              udp.println();
+            udp.endPacket();
+          }
           for (int i = 0; i < MAX_DATA; i++) {
             dataArray[i] = 0;
             panArray[i] = 0;
@@ -49,6 +108,9 @@ void loop() {
           }
         }
         count++;
+        if (count == MAX_DATA) {
+          count = 0;
+        }
       }
     } else {
       // If the tilt angle is odd, pan from max to min
@@ -56,11 +118,46 @@ void loop() {
         servoTilt.write(tiltAngle);
         servoPan.write(panAngle);
         delay(20);
-        analogRead(A0);
-        dataArray[count] = analogRead(A0);
+        dataArray[count] = analogRead(distanceSensor);
         panArray[count] = panAngle;
         tiltArray[count] = tiltAngle;
         if (count >=  MAX_DATA - 1) {
+          if (udp.parsePacket()) {
+            int data = udp.available();
+            udp.read(packet, 255);
+            packet[data_length] = 0;
+            
+            udp.beginPacket(udp.remoteIP(), udp.remotePort());
+              udp.print("distance_sensor_data ");
+              udp.print("<");
+              for (int i = 0; i < MAX_DATA; i++) {
+                  udp.print(dataArray[i]);
+                  udp.print(",");
+              }
+              udp.print(">");
+              udp.println();
+            udp.endPacket();
+            udp.beginPacket(udp.remoteIP(), udp.remotePort());
+              udp.print("servo_pan_data ");
+              udp.print("<");
+              for (int i = 0; i < MAX_DATA; i++) {
+                  udp.print(panArray[i]);
+                  udp.print(",");
+              }
+              udp.print(">");
+              udp.println();
+            udp.endPacket();
+            udp.beginPacket(udp.remoteIP(), udp.remotePort());
+              udp.print("servo_tilt_data ");
+              udp.print("<");
+              for (int i = 0; i < MAX_DATA; i++) {
+                  udp.print(tiltArray[i]);
+                  udp.print(",");
+              }
+              udp.print(">");
+              udp.println();
+            udp.endPacket();
+          }
           for (int i = 0; i < MAX_DATA; i++) {
             dataArray[i] = 0;
             panArray[i] = 0;
@@ -68,9 +165,50 @@ void loop() {
           }
         }
         count++;
+        if (count == MAX_DATA) {
+          count = 0;
+        }
       }
-    } 
+    }
   }
+  
+  if (udp.parsePacket()) {
+    int data = udp.available();
+    udp.read(packet, 255);
+    packet[data_length] = 0;
+
+    udp.beginPacket(udp.remoteIP(), udp.remotePort());
+      udp.print("distance_sensor_data ");
+      udp.print("<");
+      for (int i = 0; i < count - 1; i++) {
+        udp.print(dataArray[i]);
+        udp.print(",");
+      }
+      udp.print(">");
+      udp.println();
+    udp.endPacket();
+    udp.beginPacket(udp.remoteIP(), udp.remotePort());
+      udp.print("servo_pan_data ");
+      udp.print("<");
+      for (int i = 0; i < count - 1; i++) {
+        udp.print(panArray[i]);
+        udp.print(",");
+      }
+      udp.print(">");
+      udp.println();
+    udp.endPacket();
+    udp.beginPacket(udp.remoteIP(), udp.remotePort());
+      udp.print("servo_tilt_data ");
+      udp.print("<");
+      for (int i = 0; i < count - 1; i++) {
+        udp.print(tiltArray[i]);
+        udp.print(",");
+      }
+      udp.print(">");
+      udp.println();
+    udp.endPacket();
+  }
+  
   while (true) {
     // halts the program
     Serial.println("Scanning process finished!");
