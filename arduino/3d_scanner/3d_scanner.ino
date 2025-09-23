@@ -39,8 +39,8 @@ void setup() {
   Serial.setTimeout(0.000001);
   WiFi.begin(SSID, PWD);
   while (WiFi.status() != WL_CONNECTED) {
-      delay(100);
-      Serial.print("Connecting...");
+    delay(100);
+    Serial.print("Connecting...");
   }
   Serial.print("IP = ");
   Serial.println(WiFi.localIP());
@@ -63,14 +63,17 @@ void loop() {
         dataArray[count] = analogRead(distanceSensor);
         panArray[count] = panAngle;
         tiltArray[count] = tiltAngle;
-        // if the counter is 277, reset the arrays
+        // if the counter is 277, sends data and resets the arryas
         if (count >= MAX_DATA - 1) {
           if (udp.parsePacket()) {
+            // receives data as a check
             int data = udp.available();
             udp.read(packet, 255);
             packet[data_length] = 0;
-            
+
+            // sends packet data
             udp.beginPacket(udp.remoteIP(), udp.remotePort());
+              // sending array of distance sensor data
               udp.print("distance_sensor_data ");
               udp.print("<");
               for (int i = 0; i < MAX_DATA; i++) {
@@ -81,6 +84,7 @@ void loop() {
               udp.println();
             udp.endPacket();
             udp.beginPacket(udp.remoteIP(), udp.remotePort());
+              // sending array of the pan servo data
               udp.print("servo_pan_data ");
               udp.print("<");
               for (int i = 0; i < MAX_DATA; i++) {
@@ -91,6 +95,7 @@ void loop() {
               udp.println();
             udp.endPacket();
             udp.beginPacket(udp.remoteIP(), udp.remotePort());
+              // sending data of the tilt servo data
               udp.print("servo_tilt_data ");
               udp.print("<");
               for (int i = 0; i < MAX_DATA; i++) {
@@ -101,6 +106,7 @@ void loop() {
               udp.println();
             udp.endPacket();
           }
+          // reset the arrays
           for (int i = 0; i < MAX_DATA; i++) {
             dataArray[i] = 0;
             panArray[i] = 0;
@@ -108,6 +114,7 @@ void loop() {
           }
         }
         count++;
+        // reset count
         if (count == MAX_DATA) {
           count = 0;
         }
@@ -171,7 +178,8 @@ void loop() {
       }
     }
   }
-  
+
+  // if the data arrays aren't full or empty, send the remaining data.
   if (udp.parsePacket()) {
     int data = udp.available();
     udp.read(packet, 255);
@@ -212,6 +220,6 @@ void loop() {
   while (true) {
     // halts the program
     Serial.println("Scanning process finished!");
-  } 
+  }
 
 }
