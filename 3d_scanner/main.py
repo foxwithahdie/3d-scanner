@@ -2,10 +2,7 @@
 Main file.
 """
 
-import time
-from typing import Optional
 import socket
-import serial
 
 
 def main() -> None:
