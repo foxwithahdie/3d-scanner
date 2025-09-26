@@ -13,3 +13,12 @@ poetry install
 ```
 
 This should install all of the required packages and create a virtual environment for you to work with the code.
+
+If any of the files need to be ran, include them in a
+
+```py
+if __name__ == "__main__":
+    # function calls
+```
+
+block and run them in their corresponding file.

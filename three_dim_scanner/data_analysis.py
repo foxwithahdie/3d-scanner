@@ -117,30 +117,17 @@ def plot_data_in_spherical(
     fig = plt.figure()
     axis = fig.add_subplot(projection="3d")  # 3D plot
 
-    # y = (distance_data) * np.cos(servo_tilt_data) * np.cos(servo_pan_data)
-    # x = (distance_data) * np.cos(servo_tilt_data) * np.sin(servo_pan_data) * -1
-    # z = (distance_data) * np.sin(servo_tilt_data)
-
     # Cuts the data to only include the data that is within the optimal distance.
     new_servo_pan_data = servo_pan_data[distance_data <= opt_distance]
     new_servo_tilt_data = servo_tilt_data[distance_data <= opt_distance]
     new_distance_data = distance_data[distance_data <= opt_distance]
 
-    # z = (new_distance_data) * np.cos(new_servo_tilt_data) * np.cos(new_servo_pan_data)
-    # x = (
-    #     (new_distance_data)
-    #     * np.cos(new_servo_tilt_data)
-    #     * np.sin(new_servo_pan_data)
-    #     * -1
-    # )
-    # y = (new_distance_data) * np.sin(new_servo_tilt_data)
     axis.scatter(
         new_servo_pan_data * -1,  # X coordinates are flipped, flip by multiplying by -1
         new_distance_data,
         new_servo_tilt_data,
         c=new_distance_data,  # color map for the data, based on the distance from the sensor
     )
-    # axis.scatter(x, y, z, c=y)
     axis.set_title("Distance Sensor Visualization")
     axis.set_xlabel("pan (x, rad)")
     axis.set_ylabel("distance (y, in)")
@@ -149,14 +136,38 @@ def plot_data_in_spherical(
     plt.show()
 
 
-if __name__ == "__main__":
-    # new_data = convert_dataset("data/distance_sensor_data.txt").tolist()
-    # # print(new_data)
-    # with open("data/distance_data.txt", "w+", encoding="utf-8") as file:
-    #     file.write(str(new_data))
-    plot_data_in_spherical(
-        os.path.join("data", "distance_sensor_data.txt"),
-        os.path.join("data", "servo_pan_data.txt"),
-        os.path.join("data", "servo_tilt_data.txt"),
+def isolate_shape_plot(
+    analog_dataset: str, pan_dataset: str, tilt_dataset: str
+) -> None:
+    # The optimal closest distance from the Servo, to cut out data that is too close.
+    opt_min_distance: int = 8
+    # The optimal distance away from the Servo, to cut out unnecessary data.
+    opt_max_distance: int = 11
+
+    # Gathers data from several different sources,
+    # each of them representing the different parts of plotting spherically.
+    distance_data = np.array(convert_dataset(analog_dataset), dtype=float)  # radius
+    servo_pan_data = (
+        np.array(gather_servo_data_from_file(pan_dataset), dtype=float) - 20
+    )  # azimuthal
+    servo_tilt_data = (
+        np.array(gather_servo_data_from_file(tilt_dataset), dtype=float) - 20
+    )  # polar
+
+    plt.figure()
+
+    distance_range = (distance_data > opt_min_distance) & (
+        distance_data < opt_max_distance
     )
-    # plot_histogram(os.path.join("data", "distance_sensor_data.txt"))
+
+    new_servo_pan_data = servo_pan_data[distance_range]
+    new_servo_tilt_data = servo_tilt_data[distance_range]
+
+    plt.gca().invert_xaxis()
+
+    plt.scatter(new_servo_pan_data, new_servo_tilt_data)
+    plt.title("Plot of Relevant Points to K, Projected onto a Flat Plane")
+    plt.xlabel("Pan Angle (degrees)")
+    plt.ylabel("Tilt Angle (degrees)")
+
+    plt.show()

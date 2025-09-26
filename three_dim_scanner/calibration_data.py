@@ -79,5 +79,68 @@ def function_from_calibration() -> Callable[[np.ndarray], np.ndarray]:
     return quad_fit
 
 
-if __name__ == "__main__":
-    calibration_plot()
+def accuracy_plot() -> None:
+    """
+    Plots the accuracy of the distance sensor over the distance that it is actually.
+    """
+    data: pd.DataFrame = pd.read_excel(os.path.join("data", "calibration_test.xlsx"))
+
+    test_analog_data: np.ndarray = data["Analog"].to_numpy()
+
+    true_distances: np.ndarray = np.linspace(34, 5, 30)
+
+    calibration: dict[int, int] = calibration_data()
+    distances: np.ndarray = np.array(list(calibration.keys()))[::-1][4:]
+    analog_data: np.ndarray = np.array(list(calibration.values()))[::-1][4:]
+
+    # Fits the data to a quadratic curve
+    poly: np.ndarray = np.polyfit(distances, analog_data, 2)
+
+    # The different coefficients of the quadratic curve
+    a, b, c = (poly[0], poly[1], poly[2])
+
+    # The discriminant when solving for a quadratic equation
+    discriminant: np.ndarray = b**2 - (4 * a * (c - test_analog_data))
+
+    # Both of the roots for the solution to the quadratic equation.
+    # we used root_2 as it generated reasonable accuracy values (otherwise we
+    # get accuracy percentages around -700%, not reasonable and likely a
+    # calculation error!)
+    root_2: np.ndarray = (-b - np.sqrt(discriminant)) / (2 * a)
+
+    calculated_distances = root_2
+
+    # Percentage error calculation
+    error_percent: np.ndarray = (
+        np.absolute((calculated_distances - true_distances) / true_distances) * 100
+    )
+
+    accuracy_percent: np.ndarray = 100 - error_percent
+    good_percentage: int = 95
+
+    plt.figure()
+    plt.grid(True)
+
+    plt.bar(true_distances, accuracy_percent, color="#0072BD")
+
+    plt.axhline(
+        good_percentage,
+        color="red",
+        linestyle="--",
+        linewidth=2,
+    )
+
+    plt.text(
+        x=plt.xlim()[0],
+        y=95,
+        s="95% Accuracy Threshold",
+        color="r",
+        va="bottom",
+        ha="left",
+    )
+
+    plt.title("Plot of Measurment Accuracy")
+    plt.xlabel("True Distance (in)", fontsize=12)
+    plt.ylabel("Accuracy (%)", fontsize=12)
+
+    plt.show()

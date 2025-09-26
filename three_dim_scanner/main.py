@@ -68,20 +68,16 @@ def servo_data_collect() -> None:
 
     # Save data to files
     with open(
-        os.path.join("data", "second_distance_sensor_data.txt"), "w+", encoding="utf-8"
+        os.path.join("data", "distance_sensor_data.txt"), "w+", encoding="utf-8"
     ) as file_1:
         file_1.write(str(distance_sensor_data))
-    # with open(
-    #     os.path.join("data", "servo_pan_data.txt"), "w+", encoding="utf-8"
-    # ) as file_2:
-    #     file_2.write(str(servo_pan_data))
     with open(
-        os.path.join("data", "second_servo_tilt_data.txt"), "w+", encoding="utf-8"
+        os.path.join("data", "servo_pan_data.txt"), "w+", encoding="utf-8"
+    ) as file_2:
+        file_2.write(str(servo_pan_data))
+    with open(
+        os.path.join("data", "servo_tilt_data.txt"), "w+", encoding="utf-8"
     ) as file_3:
         file_3.write(str(servo_tilt_data))
 
     print("Collected!")
-
-
-if __name__ == "__main__":
-    servo_data_collect()
