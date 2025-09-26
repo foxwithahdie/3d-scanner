@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "3d-scanner"
+name = "three_dim_scanner"
 version = "0.0.1"
 description = "A 3D Scanner run by an Arduino."
 authors = ["Your Name <you@example.com>"]
